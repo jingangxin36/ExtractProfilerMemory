@@ -2,7 +2,7 @@
 
 an editor tool to save unity profiler memory
 
-编辑器工具, 用于提取UnityProfiler提取内存数据
+编辑器工具, 用于提取UnityProfiler内存数据
 
 ### 功能
 
@@ -15,11 +15,11 @@ an editor tool to save unity profiler memory
 ### 如何使用
 
 1. 打开窗口`Window/Extract Profiler Memory`
-![](https://github.com/jingangxin36/ExtractProfilerMemory/Project/Images/1.png)
+![](https://github.com/jingangxin36/ExtractProfilerMemory/blob/master/Project/Images/1.png)
 2. 选择连接的设备, Editor或手机
-![](https://github.com/jingangxin36/ExtractProfilerMemory/Project/Images/2.png)
+![](https://github.com/jingangxin36/ExtractProfilerMemory/blob/master/Project/Images/2.png)
 3. 将Profiler窗口切换到Memory视图, 并选择Detailed选项(方便数据显示)
-![](https://github.com/jingangxin36/ExtractProfilerMemory/Project/Images/3.png)
+![](https://github.com/jingangxin36/ExtractProfilerMemory/blob/master/Project/Images/3.png)
 4. 点击`Take Sample`, 获取内存快照
 5. 选择合适的内存大小过滤和深度过滤
 6. 点击`Extract Memory`,将数据输出到txt文件
@@ -27,9 +27,9 @@ an editor tool to save unity profiler memory
 ### 效果截图
 
 1. Android环境
-![](https://github.com/jingangxin36/ExtractProfilerMemory/Project/Images/2.1.png)
+![](https://github.com/jingangxin36/ExtractProfilerMemory/blob/master/Project/Images/2.1.png)
 2. Editor环境
-![](https://github.com/jingangxin36/ExtractProfilerMemory/Project/Images/2.2.png)
+![](https://github.com/jingangxin36/ExtractProfilerMemory/blob/master/Project/Images/2.2.png)
 
 ### 使用环境
 
