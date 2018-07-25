@@ -35,6 +35,56 @@ an editor tool to save unity profiler memory
 
 Unity 5.6及以上
 
+### 实现方法介绍
+
+#### 数据来自哪里
+
+利用ReSharper插件的反编译功能, 可以得到UnityEditor.ProfilerWindow的CS部分的代码, 如下图
+
+![](https://github.com/jingangxin36/ExtractProfilerMemory/blob/master/Project/Images/Reflection.png)
+
+我们要提取的数据就是红框标记字段, 字段的说明如下
+
+- `UnityEditor.ProfilerWindow`: 对应Editor下的Profiler窗口
+- `ProfilerWindow.m_ProfilerWindows`:Profiler窗口下各种类型窗口的集合
+- `ProfilerWindow.m_CurrentArea`: 当前窗口的类型, 我们要提取的数据来自`ProfilerArea.Memory`
+- `ProfilerWindow.m_MemoryListView`: 内存窗口下的内存数据记录类
+- `MemoryTreeList.m_Root`: 记录了内存对象列表的根节点, 即所有内存对象占的总内存
+- `MemoryElement.children`: 当前内存对象类型包含的子内存对象
+- `MemoryElement.totalMemory`: 当前内存对象所占的总内存
+- `MemoryElement.name`: 当前内存对象的名字, 例如: `Other`, `Assets`, `ShaderLab`等
+
+#### 如何提取该数据
+
+此工具利用反射原理, 通过递归遍历`MemoryElement.children`来提取我们所需的数据结构`totalMemory`,`name`, `totalMemory`存入自定义类`MemoryElement`, 同时增加字段`_depth`来记录该内存对象的深度, 方便数据过滤
+
+关键代码如下
+
+```c#
+    public static MemoryElement Create(Dynamic srcMemoryElement, int depth, int filterDepth, float filterSize)
+    {
+        if (srcMemoryElement == null) return null;
+        var dstMemoryElement = new MemoryElement { _depth = depth };
+        Dynamic.CopyFrom(dstMemoryElement, srcMemoryElement.InnerObject,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetField);
+
+        var srcChildren = srcMemoryElement.PublicInstanceField<IList>("children");
+        if (srcChildren == null) return dstMemoryElement;
+        foreach (var srcChild in srcChildren)
+        {
+            var memoryElement = Create(new Dynamic(srcChild), depth + 1, filterDepth, filterSize);
+            if (memoryElement == null) continue;
+            if (depth > filterDepth) continue;
+            if (!(memoryElement.totalMemory >= filterSize)) continue;
+            dstMemoryElement.children.Add(memoryElement);
+        }
+
+        dstMemoryElement.children.Sort();
+        return dstMemoryElement;
+    }
+```
+
+
 ### 参考
 
 - [Unity Editor 提取Profiler数据 - Memory](https://www.jianshu.com/p/5674e96f2b8e)

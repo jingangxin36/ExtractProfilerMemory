@@ -1,0 +1,9 @@
+Memory Size: >= 1MB
+Memory Depth: 1
+Current Target: Editor
+**********************
+ -, 432.6632MB
+	 Other, 399.0226MB
+	 Builtin Resources, 27.26622MB
+	 Assets, 5.065248MB
+	 Not Saved, 1.295912MB

@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
 
 public class ExtractMemoryEditor: EditorWindow
 {
@@ -16,7 +13,7 @@ public class ExtractMemoryEditor: EditorWindow
 
     public static ExtractMemoryEditor Window;
 
-    [UnityEditor.MenuItem("Window/Extract Profiler Memory")]
+    [MenuItem("Window/Extract Profiler Memory")]
     public static void ShowWindow()
     {
         EditorApplication.ExecuteMenuItem("Window/Profiler");
@@ -55,15 +52,15 @@ public class ExtractMemoryEditor: EditorWindow
     private MemoryElement _memoryElementRoot;
     private void ExtractMemory(float memSize, int memDepth)
     {
-        float filterSize = memSize * 1024 * 1024;
-        DirectoryInfo topDir = Directory.GetParent(Application.dataPath);
-        var outputPath = string.Format("{0}/MemoryDetailed{1:yyyy_MM_dd_HH_mm_ss}.txt", topDir.FullName, DateTime.Now);
+        var filterSize = memSize * 1024 * 1024;
+        var parent = Directory.GetParent(Application.dataPath);
+        var outputPath = string.Format("{0}/MemoryDetailed{1:yyyy_MM_dd_HH_mm_ss}.txt", parent.FullName, DateTime.Now);
         File.Create(outputPath).Dispose();
         _memoryElementRoot = ProfilerWindow.GetMemoryDetailRoot(memDepth, filterSize);
 
         if (null != _memoryElementRoot)
         {
-            StreamWriter writer = new StreamWriter(outputPath);
+            var writer = new StreamWriter(outputPath);
             writer.WriteLine("Memory Size: >= {0}MB", _memorySize);
             writer.WriteLine("Memory Depth: {0}", _memoryDepth);
             writer.WriteLine("Current Target: {0}", ProfilerDriver.GetConnectionIdentifier(ProfilerDriver.connectedProfiler));
@@ -76,7 +73,7 @@ public class ExtractMemoryEditor: EditorWindow
         Process.Start(outputPath);
     }
 
-    private void TakeSample()
+    private static void TakeSample()
     {
         ProfilerWindow.RefreshMemoryData();
     }

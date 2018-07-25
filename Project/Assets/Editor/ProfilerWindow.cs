@@ -10,25 +10,24 @@ using UnityEngine;
 
 public static class ProfilerWindow
 {
-    private static List<Dynamic> _wnds = null;
+    private static List<Dynamic> _windows = null;
 
-    private static Dynamic _GetWnd(ProfilerArea area)
+    private static Dynamic _GetWindow(ProfilerArea area)
     {
-        if (null == _wnds)
+        if (null == _windows)
         {
-            DynamicType dynamicType = new DynamicType(typeof(EditorWindow));
-            Dynamic type = dynamicType.GetType("UnityEditor.ProfilerWindow");
-            IList list = type.PrivateStaticField<IList>("m_ProfilerWindows");
-            _wnds = new List<Dynamic>();
-            for (int i = 0; i < list.Count; i++)
+            var dynamicType = new DynamicType(typeof(EditorWindow));
+            var type = dynamicType.GetType("UnityEditor.ProfilerWindow");
+            var list = type.PrivateStaticField<IList>("m_ProfilerWindows");
+            _windows = new List<Dynamic>();
+            foreach (var window in list)
             {
-                _wnds.Add(new Dynamic(list[i]));
+                _windows.Add(new Dynamic(window));
             }
         }
-        for (int i = 0; i < _wnds.Count; i++)
+        foreach (var dynamic in _windows)
         {
-            Dynamic dynamic = _wnds[i];
-            ProfilerArea val = (ProfilerArea)dynamic.PrivateInstanceField("m_CurrentArea");
+            var val = (ProfilerArea)dynamic.PrivateInstanceField("m_CurrentArea");
             if (val == area)
             {
                 return dynamic;
@@ -39,32 +38,22 @@ public static class ProfilerWindow
 
     public static MemoryElement GetMemoryDetailRoot(int filterDepth, float filterSize)
     {
-        Dynamic dynamic = _GetWnd(ProfilerArea.Memory);
-        if (null != dynamic)
-        {
-            Dynamic dynamic2 = new Dynamic(dynamic.PrivateInstanceField("m_MemoryListView"));
-            object obj = dynamic2.PrivateInstanceField("m_Root");
-            if (null != obj)
-            {
-                return MemoryElement.Create(new Dynamic(obj), 0, filterDepth, filterSize);
-            }
-            return null;
-        }
-        return null;
+        var windowDynamic = _GetWindow(ProfilerArea.Memory);
+        if (windowDynamic == null) return null;
+        var listViewDynamic = new Dynamic(windowDynamic.PrivateInstanceField("m_MemoryListView"));
+        var rootDynamic = listViewDynamic.PrivateInstanceField("m_Root");
+        return rootDynamic != null ? MemoryElement.Create(new Dynamic(rootDynamic), 0, filterDepth, filterSize) : null;
     }
 
     public static void WriteMemoryDetail(StreamWriter writer, MemoryElement root)
     {
-        if (null != root)
+        if (null == root) return;
+        writer.WriteLine(root.ToString());
+        foreach (var memoryElement in root.children)
         {
-            writer.WriteLine(root.ToString());
-            for (int i = 0; i < root.children.Count; i++)
+            if (null != memoryElement)
             {
-                var memoryElement = root.children[i];
-                if (null != memoryElement)
-                {
-                    WriteMemoryDetail(writer, memoryElement);
-                }
+                WriteMemoryDetail(writer, memoryElement);
             }
         }
     }
@@ -72,7 +61,7 @@ public static class ProfilerWindow
     public static void RefreshMemoryData()
     {
         
-        Dynamic dynamic = _GetWnd(ProfilerArea.Memory);
+        var dynamic = _GetWindow(ProfilerArea.Memory);
         if (null != dynamic)
         {
             dynamic.CallPrivateInstanceMethod("RefreshMemoryData");

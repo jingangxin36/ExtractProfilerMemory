@@ -15,17 +15,8 @@ public class Dynamic
 
     public readonly Type InnerType;
 
-    private object _obj;
 
-
-    public object InnerObject
-    {
-        get
-        {
-            return _obj;
-        }
-
-    }
+    public object InnerObject { get; private set; }
 
     public Dynamic(Type innerType)
     {
@@ -34,28 +25,24 @@ public class Dynamic
 
     public Dynamic(object obj)
     {
-        if (null != obj)
-        {
-            InnerType = obj.GetType();
-            _obj = obj;
-        }
+        if (null == obj) return;
+        InnerType = obj.GetType();
+        InnerObject = obj;
     }
 
-    public static void ShallowCopyFrom(object dst, object src, BindingFlags flags)
+    public static void CopyFrom(object dst, object src, BindingFlags flags)
     {
-        if (dst != null && null != src)
+        if (dst == null || src == null) return;
+        var srcType = src.GetType();
+        var dstType = dst.GetType();
+        var dstFields = dstType.GetFields(flags);
+        var dstArray = dstFields;
+        foreach (var dstFieldInfo in dstArray)
         {
-            Type type = dst.GetType();
-            Type type2 = src.GetType();
-            FieldInfo[] fields = type.GetFields(flags);
-            FieldInfo[] array = fields;
-            foreach (FieldInfo fieldInfo2 in array)
+            var srcFieldInfo = srcType.GetField(dstFieldInfo.Name, flags);
+            if (srcFieldInfo != null && dstFieldInfo.FieldType == srcFieldInfo.FieldType)
             {
-                var fieldInfo = type2.GetField(fieldInfo2.Name, flags);
-                if (fieldInfo != null && fieldInfo2.FieldType == fieldInfo.FieldType)
-                {
-                    fieldInfo2.SetValue(dst, fieldInfo.GetValue(src));
-                }
+                dstFieldInfo.SetValue(dst, srcFieldInfo.GetValue(src));
             }
         }
     }
@@ -64,7 +51,7 @@ public class Dynamic
     {
         if (obj.GetType() == InnerType)
         {
-            _obj = obj;
+            InnerObject = obj;
         }
     }
 
@@ -98,20 +85,6 @@ public class Dynamic
         return PublicInstanceField(fieldName) as T;
     }
 
-    private object _GetFiled(string fieldName, BindingFlags flags)
-    {
-        if (null != InnerType)
-        {
-            FieldInfo field = InnerType.GetField(fieldName, flags);
-            if (null != field)
-            {
-                return field.GetValue(_obj);
-            }
-            return null;
-        }
-        return null;
-    }
-
     public void CallPublicInstanceMethod(string methodName, params object[] args)
     {
         _InvokeMethod(methodName, PublicInstanceMethodFlag, args);
@@ -122,15 +95,18 @@ public class Dynamic
         _InvokeMethod(methodName, PrivateInstanceMethodFlag, args);
     }
 
+    private object _GetFiled(string fieldName, BindingFlags flags)
+    {
+        if (null == InnerType) return null;
+        var field = InnerType.GetField(fieldName, flags);
+        return field != null ? field.GetValue(InnerObject) : null;
+    }
+
     private void _InvokeMethod(string methodName, BindingFlags flags, params object[] args)
     {
-        if (null != InnerType)
-        {
-            MethodInfo method = InnerType.GetMethod(methodName, flags);
-            if (null != method)
-            {
-                method.Invoke(_obj, args);
-            }
-        }
+        if (InnerType == null) return;
+        var method = InnerType.GetMethod(methodName, flags);
+        if (method == null) return;
+        method.Invoke(InnerObject, args);
     }
 }
