@@ -7,6 +7,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public static class ProfilerWindow
 {
@@ -40,7 +41,17 @@ public static class ProfilerWindow
     {
         var windowDynamic = _GetWindow(ProfilerArea.Memory);
         if (windowDynamic == null) return null;
-        var listViewDynamic = new Dynamic(windowDynamic.PrivateInstanceField("m_MemoryListView"));
+        Dynamic listViewDynamic = null;
+
+#if UNITY_2018_3_OR_NEWER
+        var modules = new Dynamic(windowDynamic.PrivateInstanceField("m_ProfilerModules"));
+        var enumerable = modules.InnerObject as IList;
+        var memModule = enumerable[3];
+        var memModuleDyc = new Dynamic(memModule);
+        listViewDynamic = new Dynamic(memModuleDyc.PrivateInstanceField("m_MemoryListView"));
+#else
+        listViewDynamic = new Dynamic(windowDynamic.PrivateInstanceField("m_MemoryListView"));
+#endif
         var rootDynamic = listViewDynamic.PrivateInstanceField("m_Root");
         return rootDynamic != null ? MemoryElement.Create(new Dynamic(rootDynamic), 0, filterDepth, filterSize) : null;
     }

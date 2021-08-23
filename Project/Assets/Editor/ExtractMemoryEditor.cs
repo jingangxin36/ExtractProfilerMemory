@@ -16,8 +16,13 @@ public class ExtractMemoryEditor: EditorWindow
     [MenuItem("Window/Extract Profiler Memory")]
     public static void ShowWindow()
     {
+#if UNITY_2018_3_OR_NEWER
+        EditorApplication.ExecuteMenuItem("Window/Analysis/Profiler");
+#else
         EditorApplication.ExecuteMenuItem("Window/Profiler");
-        if (Window == null)
+#endif
+
+        if(Window == null)
         {
             Window = CreateInstance<ExtractMemoryEditor>();
         }

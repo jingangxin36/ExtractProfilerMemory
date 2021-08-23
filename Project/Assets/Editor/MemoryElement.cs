@@ -25,6 +25,10 @@ public class MemoryElement : IComparable<MemoryElement>
         var dstMemoryElement = new MemoryElement { _depth = depth };
         Dynamic.CopyFrom(dstMemoryElement, srcMemoryElement.InnerObject,
             BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetField);
+        if (dstMemoryElement.name == null)
+        {
+            dstMemoryElement.name = "";
+        }
 
         var srcChildren = srcMemoryElement.PublicInstanceField<IList>("children");
         if (srcChildren == null) return dstMemoryElement;
@@ -44,28 +48,30 @@ public class MemoryElement : IComparable<MemoryElement>
 
     public override string ToString()
     {
-        var text = string.IsNullOrEmpty(name) ? "-" : name;
-        var text2 = "KB";
-        var num = totalMemory / 1024f;
-        if (num > 512f)
+        var displayName = string.IsNullOrEmpty(name) ? "-" : name;
+        string numText = null;
+        if (totalMemory < 1024)
         {
-            num /= 1024f;
-            text2 = "MB";
+            numText = totalMemory.ToString() + "B";
         }
-
-        var resultString = string.Format(new string('\t', _depth) + " {0}, {1}{2}", text, num, text2);
-        return resultString;
+        else if(totalMemory < 1024 * 1024)
+        {
+            numText = (totalMemory / 1024f).ToString("F2") + "KB";
+        }
+        else
+        {
+            numText = (totalMemory / (1024 * 1024f)).ToString("F2") + "MB";
+        }
+        return $"{new string('\t', _depth)}{displayName}, {numText}";
     }
 
     public int CompareTo(MemoryElement other)
     {
         if (other.totalMemory != totalMemory)
         {
-            return (int) (other.totalMemory - totalMemory);
+            return other.totalMemory.CompareTo(totalMemory);
         }
 
-        if (string.IsNullOrEmpty(name)) return -1;
-        return !string.IsNullOrEmpty(other.name) ? string.Compare(name, other.name, StringComparison.Ordinal) : 1;
-
+        return other.name.CompareTo(name);
     }
 }
